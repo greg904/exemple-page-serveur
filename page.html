@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Titre</title>
+    </head>
+    <body>
+        <div>
+            <label for="champ">Champ:</label>
+            <input type="text" id="champ"/>
+        </div>
+        <button id="bouton">Envoyer</button>
+        <script>
+            var champ = document.getElementById("champ");
+            var bouton = document.getElementById("bouton");
+            bouton.addEventListener("click", function(evenement) {
+                var valeurChamp = champ.value;
+
+                // La requête peut prendre un peu de temps car il faut
+                // l'envoyer, que le serveur réponde et qu'on reçoive la
+                // réponse. "fetch" n'attend pas d'avoir la réponse avant de
+                // retourner, il retourne directement un objet de type
+                // "Promise" (promesse) pour qu'on puisse faire d'autre calculs
+                // pendant que la requête se fait.
+                var promesseReponse = fetch(
+                    "http://localhost:8080/",
+                    {
+                        // Seules les requêtes POST peuvent avoir un corps.
+                        method: "POST",
+
+                        // Corps de la requête.
+                        body: valeurChamp,
+
+                        // Je rajoute une entête bidon pour montrer comment ça
+                        // marche. Normalement, on a presque jamais besoin
+                        // d'utiliser les entêtes.
+                        headers: {
+                            MonEnteteRequete: "bonjour serveur",
+                        },
+                    },
+                );
+
+                // On dit à la promesse que quand elle est résolue (il y a une
+                // réponse), on veut que notre fonction soit appelée.
+                promesseReponse.then(function(reponse) {
+                    // 404, 200, 500, etc.
+                    console.log('Code de réponse :', reponse.status);
+
+                    // J'utilise une syntaxe bizarre pour convertir les entêtes
+                    // pour qu'elles s'affichent bien dans la console mais pas
+                    // besoin de comprendre ça.
+                    console.log('Entêtes :', ...reponse.headers);
+
+                    // "promesseCorps" est encore une promesse qui représente
+                    // le corps de la réponse du serveur...
+                    var promesseCorps = reponse.text();
+
+                    promesseCorps.then(function(corps) {
+                        console.log('Corps :', corps);
+                    });
+
+                    promesseCorps.catch(function(erreur) {
+                        console.log('Erreur :', erreur);
+                    });
+                });
+
+                // Une promesse peut ne pas être résolue s'il y a eu une
+                // erreur. Ici on dit à la promesse d'appeler notre fonction
+                // dans ce cas.
+                promesseReponse.catch(function(erreur) {
+                    console.log('Erreur :', erreur);
+                });
+
+                // Ici, la requête n'a toujours pas commencé ! On a juste dit
+                // à la promesse d'appeler nos fonctions quand elle est
+                // résolue ou a une erreur. Donc là on peut faire des trucs
+                // pendant que la requête se fait si on veut.
+            });
+        </script>
+    </body>
+</html>
